@@ -15,6 +15,11 @@
     <div class="col-8 offset-2 my-5">
       <div class="card">
         <div class="card-body">
+          <label>Start:</label>
+          <input type="text" id="start" />
+          <label>End:</label>
+          <input type="text" id="end" />
+          <button type="button" onclick="searchData()">Search</button>
           Chart
           <hr />
           <canvas id="dynamic-chart" width="400" height="400"></canvas>
@@ -45,7 +50,6 @@
       const doughnut = document.getElementById("doughnut");
       const polar = document.getElementById("polar");
       const radar = document.getElementById("radar");
-      const dynamicChart = document.getElementById("dynamic-chart");
 
       line.addEventListener("click", changeLine);
       bar.addEventListener("click", changeBar);
@@ -54,34 +58,54 @@
       doughnut.addEventListener("click", changeDoughnut);
       polar.addEventListener("click", changePolar);
       radar.addEventListener("click", changeRadar);
-      dynamicChart.addEventListener("click", changeDynamicChart);
 
       const ctx = document.getElementById("dynamic-chart").getContext("2d");
 
       let fetchData = fetch("chart.json").then(
         async (response) =>
           await response.json().then((item) => {
-            dataX = item.x;
-            dataY = item.y;
-            dataZ = item.z;
+            dataX = item.x.splice(0, 100);
+            dataY = item.y.splice(0, 100);
+            dataZ = item.z.splice(0, 100);
+
+            handlex = item.x.filter((item) => item > 1);
 
             let values = [];
-            const filterDataX = dataX.filter((item, index) => {
-              return item > 0;
-            });
-
-            for (let i = 0; i < 10; i++) {
-              values.push(filterDataX[i]);
+            for (let i = 0; i < dataX.length; i++) {
+              values.push(dataX[i]);
             }
             myChart.data.labels = values;
             myChart.data.datasets[0].data = dataX;
             myChart.data.datasets[1].data = dataY;
             myChart.data.datasets[2].data = dataZ;
+            myChart.update();
           })
       );
 
+      const searchData = () => {
+        let start = document.getElementById("start").value;
+        let end = document.getElementById("end").value;
+        document.getElementById("start").innerHTML = start;
+        document.getElementById("end").innerHTML = end;
+        const newDataX = dataX.filter((item, index) => {
+          return item > start && item < end;
+        });
+        const newDataY = dataY.filter((item, index) => {
+          return item > start && item < end;
+        });
+        const newDataZ = dataZ.filter((item, index) => {
+          return item > start && item < end;
+        });
+
+        myChart.data.datasets[0].data = newDataX;
+        myChart.data.datasets[1].data = newDataY;
+        myChart.data.datasets[2].data = newDataZ;
+
+        myChart.update();
+      };
+
       const myChart = new Chart(ctx, {
-        type: "bar",
+        type: "line",
         data: {
           labels: [],
           datasets: [
@@ -92,6 +116,7 @@
               borderColor: ["rgba(12, 238, 106, 0.342)"],
               borderWidth: 1,
             },
+
             {
               label: "Y",
               data: [],
@@ -152,15 +177,6 @@
         const updateType = "radar";
         myChart.config.type = updateType;
         myChart.update();
-      }
-      function changeDynamicChart() {
-        fetchData.then((data) => {
-          myChart.data.labels = dataX;
-          myChart.data.datasets[0].data = dataX;
-          myChart.data.datasets[1].data = dataY;
-          myChart.data.datasets[2].data = dataZ;
-          myChart.update();
-        });
       }
     </script>
   </body>
